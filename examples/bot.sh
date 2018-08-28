@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
+# make sure that you create a token file that contains the token string for the bot
+
 # define import things
-export BOT_TOKEN="NDc1MTAyMjMyNDU1NTQ0ODM0.DmTqYA.d01YDkqedB5_zwK1UkC5GWS4U_A"
-export BOT_URL="https://github.com/bmofa/bashcord"
+export BOT_TOKEN="$(cat $(dirname $0)/token)"
 
 # source it (after defining token... etc...)
 source $HOME/w/bashcord/bashcord.bash
