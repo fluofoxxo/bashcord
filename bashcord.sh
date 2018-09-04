@@ -1,38 +1,34 @@
 #!/bin/sh
 
 log() {
-	local level
-	level="$(echo "$1" | tr '[:lower:]' '[:upper:]')"
-	local message="$2"
-	case "$level" in
-		ERROR)
+	case "$1" in
+		ERROR|error)
 			local color=31
 			;;
-		WARNING)
+		WARNING|warning)
 			local color=33
 			;;
-		INFO)
+		INFO|info)
 			local color=32
 			;;
-		DEBUG)
-			local color=34
-			;;
-		EVENT)
+		EVENT|event)
 			local color=36
+			;;
+		DEBUG|debug)
+			local color=34
 			;;
 		*)
 			local color=35
 			;;
-		esac
-		shift
-		echo "\033[1m$(date -Iseconds)\033[m [\033[${color};1m$level\033[m] $message"
+	esac
+	echo "\033[1m$(date "+%y-%m-%d %H:%M:%S")\033[m [\033[${color};1m$1\033[m] $2"
 }
+alias error="log ERROR"
+alias warn="log WARNING"
+alias inform="log INFO"
+alias debug="log DEBUG"
+alias event="log EVENT"
 
-alias error="log error"
-alias warn="log warning"
-alias inform="log info"
-alias debug="log debug"
-alias event="log event"
 if [ -z "$API_TOKEN" ]; then
 	error "API_TOKEN not set"
 	exit 1	
@@ -65,18 +61,18 @@ api() {
 	endpoint="$2"
 	payload="$3"
 	if [ -z "$method" ]; then
-		log error "No method provided for API request"
+		error "No method provided for API request"
 		exit 1
 	fi
 	if [ -z "$endpoint" ]; then
-		log error "No endpoint provided for API request"
+		error "No endpoint provided for API request"
 		exit 2
 	fi
 	if [ -z "$payload" ]; then
-		inform "${method} to ${endpoint}"
+		debug "${method} to ${endpoint}"
 		curl -X "$method" -s -H "$BOT_AUTH" -A "$BOT_AGENT" "${API}${endpoint}"
 	else
-		inform "${method} to ${endpoint} with ${payload}"
+		debug "${method} to ${endpoint} with ${payload}"
 		curl -X "$method" -s -H "$BOT_AUTH" -A "$BOT_AGENT" "${API}${endpoint}" -d "$payload"
 	fi
 }
