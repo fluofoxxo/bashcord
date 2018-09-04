@@ -1,3 +1,5 @@
+**NOTE: The following is *very* out of date**
+
 Discord API written in Bash for the modern world
 
 ## Why?
