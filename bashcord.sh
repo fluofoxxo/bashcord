@@ -1,7 +1,8 @@
 #!/bin/sh
 
 log() {
-	local level="$(echo "$1" | tr '[:lower:]' '[:upper:]')"
+	local level
+	level="$(echo "$1" | tr '[:lower:]' '[:upper:]')"
 	local message="$2"
 	case "$level" in
 		ERROR)
