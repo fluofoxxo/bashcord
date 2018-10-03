@@ -47,66 +47,63 @@ require() {
 
 ################
 # Requirements #
-###############
+################
 require curl     # Packaged pretty universally, pre-installed on most systems
 require jq       # Usually packaged.
 require websocat # Sometimes packaged.
 
-#################
-# Configuration #
-#################
-if [ -z "$API_TOKEN" ]; then
-	error "API_TOKEN not set"
-	exit 1	
-fi
-
-# Create Authorization header for API requests
-BOT_AUTH="Authorization: ${API_TOKEN}"
-
-# Use the default api, or force a version if asked to
-if [ -z "$API_VERSION" ]; then
-	inform "Using current API"
-	API="https://discordapp.com/api"
-else
-	inform "Using API $API_VERSION"
-	API="https://discordapp.com/api/v${API_VERSION}"
-fi
-
-if [ -z "$BOT_URL" ]; then
-	warn "No BOT_URL specified, using 'https://github.com/0xfi/bashcord'"
-	BOT_URL="https://github.com/0xfi/bashcord"
-fi
-
-if [ -z "$BOT_VERSION" ]; then
-	BOT_VERSION="1.0"
-fi
-
-# Generate the User-Agent header so the API know who we are
-BOT_AGENT="DiscordBot (${BOT_URL}, ${BOT_VERSION})"
+############
+# Defaults #
+############
+BOT_URL="https://github.com/0xfi/bashcord"
+BOT_VERSION="1.0"
 
 #####################
 # HTML API Requests #
 #####################
+
 api() {
-	if [ -z "$1" ]; then
-		error "No method provided for API request"
-		exit 1
-	fi
-	if [ -z "$2" ]; then
-		error "No endpoint provided for API request"
-		exit 2
-	fi
+	[ -z "$1" ]         && error "No method for request"      && exit 1
+	[ -z "$2" ]         && error "No endpoint for request"    && exit 2
+	[ -z "$BOT_AUTH" ]  && error "Authorization not defined"  && exit 3
+	[ -z "$BOT_AGENT" ] && error "Bot User-Agent not defined" && exit 4
 	# If called with data to upload, add it to the curl request with `-d`
-	if [ -z "$3" ]; then
-		event "${1} to ${2}"
-		curl -X "$1" -s -H "$BOT_AUTH" -A "$BOT_AGENT" "${API}${2}"
-	else
-		event "${1} to ${2} with ${3}"
-		curl -X "$1" -s -H "$BOT_AUTH" -A "$BOT_AGENT" "${API}${2}" -d "$3"
-	fi
+	event "${1} to ${2} $([ -n "${3}" ] && echo "with ${3}")"
+	curl -X "${1}" -s -H "${BOT_AUTH}" -A "${BOT_AGENT}" "${API}${2}" $([ -n "${3}" ] && echo "-d ${3}")
+	[ $? -eq 0 ] || error "Request failed" 
 }
 
-bashcord() {
-	# TODO: Connect to websocket and enter event loop
-	inform "Started"
+# Default pre_init.
+#
+_pre_init() {
+	event "Starting Bashcord..."
+}
+
+# Default post_init.
+#
+_post_init() {
+	echo "Connecting as... $(api GET /users/@me | jq .username -r)"
+}
+
+# Setup some things and connect to the Discord API.
+#
+connect() {
+	# Run pre-init routines
+	if [ "$(type pre_init)" = "function" ]; then pre_init; else _pre_init; fi
+	[ -z "${API_TOKEN}" ] && error "API token not set" && exit
+	# Configure derivative variables
+	API_TOKEN="$(cat token)"
+	BOT_AUTH="Authorization: ${API_TOKEN}" 
+	debug "${BOT_AUTH}"
+	if [ -z "$API_VERSION" ]; then
+		inform "Using current API"
+		API="https://discordapp.com/api"
+	else
+		inform "Using API $API_VERSION"
+		API="https://discordapp.com/api/v${API_VERSION}"
+	fi
+	BOT_AGENT="DiscordBot (${BOT_URL}, ${BOT_VERSION})"
+	debug "User-Agent: ${BOT_AGENT}"
+	# Run post-init routines
+	if [ "$(type post_init)" = "function" ]; then post_init; else _post_init; fi
 }
