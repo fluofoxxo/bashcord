@@ -1,6 +1,6 @@
 ## bashcord
-*Discord API wrapper for Bash with minimal dependancies*
-## Structure of a Bashcord Bot
+*Discord API wrapper for Bash with minimal dependencies*
+## Structure of a bashcord Bot
 The general flow of a bashcord application is as follows:
 - Define [configuration](#configuration) variables
 - Define potential helper functions
@@ -10,7 +10,7 @@ The general flow of a bashcord application is as follows:
 - Start the bot by calling `bashcord`
 
 ## Configuration
-As of now, theere are four important configuration variables that are used
+As of now, there are four important configuration variables that are used
 by bashcord. The proper placement for defining these values is setting them
 before `bashcord.sh` is sourced.
 ```Bash
@@ -38,8 +38,8 @@ version that Discord provides.
 ## Usage
 ### Logging
 The logging function is still WIP and does not currently support writing to
-a log file that can be seperate from the standard output stream. Calling the
-`log` function takes two paramaters. The first of these parameters is the
+a log file that can be separate from the standard output stream. Calling the
+`log` function takes two parameters. The first of these parameters is the
 "log level" of the script. The standard levels are `ERROR, WARNING, INFO,
 DEBUG, EVENT`, however, *any* string can be passed to the log level, but it
 will not have any custom properties with it.
@@ -65,7 +65,7 @@ alias event="log event"
 ### The `api` Function
 Using the `api` function is extremely simple. To make an HTTP request to an
 endpoint of the Discord API. To make a request using the `api` function
-there are two imporant parameters. First, the HTTP request method is
+there are two important parameters. First, the HTTP request method is
 specified (GET, DELETE, PUT, PATCH, POST, etc.).
 ```Bash
 api GET /users/@me
