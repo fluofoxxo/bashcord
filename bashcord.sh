@@ -5,13 +5,7 @@
 ###########
 # Utility #
 ###########
-e_fatal=0
-e_error=1
-e_warn=2
-e_event=3
-e_info=4
-e_debug=5
-e_all=6
+e_fatal=0; e_error=1; e_warn=2; e_event=3; e_info=4; e_debug=5; e_all=6
 LOG_LEVEL=${e_all}
 log() {
 	if [ $(eval echo "\$e_${1}") -gt ${LOG_LEVEL} ]; then return; fi
@@ -23,7 +17,8 @@ log() {
 		info) c="32"  ;;
 		debug)c="34"  ;;
 	esac
-	if ${LOGGING_NOCOLOR}; then tag="${1}"; else tag="\033[${c}m${1}\033[m"; fi
+	tag="\033[${c}m${1}\033[m"
+	${LOGGING_NOCOLOR} && tag="${1}"
 	printf "$(date +%T) [${tag}] ${2}\n"
 }
 die() { log fatal "${2}"; exit "${1}"; }
