@@ -5,63 +5,43 @@
 ###########
 # Utility #
 ###########
+e_fatal=0
+e_error=1
+e_warn=2
+e_event=3
+e_info=4
+e_debug=5
+e_all=6
+LOG_LEVEL=${e_all}
 log() {
-	if [ "${ENABLE_DEBUG}" = "true" ] || [ "${1}" = "DEBUG" ]; then return; fi
+	if [ $(eval echo "\$e_${1}") -gt ${LOG_LEVEL} ]; then return; fi
 	case "${1}" in
-		ERROR*)
-			color="31";;
-		FATAL*)
-		    color="31;1";;
-		WARN*)
-			color=33;;
-		INFO*)
-			color=32;;
-		EVENT*)
-			color="36;1";;
-		DEBUG*)
-			color=34;;
-		*)
-			color=35;;
+		fatal)c="31;1";;
+		error)c="31"  ;;
+		warn) c="33"  ;;
+		event)c="36;1";;
+		info) c="32"  ;;
+		debug)c="34"  ;;
 	esac
-	if [ "${COLORED_LOGGING}" = "true" ]; then
-		printf "\033[1m%s\033[m \033[%sm%s\033[m %s\n" \
-"$(date "+%y-%m-%d %H:%M:%S")" "${color}" "${1}" "${2}">&2
-	else
-		printf "$(date "+%y-%m-%d %H:%M:%S") ${1} - ${2}\n" >&2
-	fi
+	if ${LOGGING_NOCOLOR}; then tag="${1}"; else tag="\033[${c}m${1}\033[m"; fi
+	printf "$(date +%T) [${tag}] ${2}\n"
 }
-error()  { log ERROR "$@"; }
-warn()   { log "WARN" "$@"; }
-inform() { log "INFO" "$@"; }
-debug()  { log DEBUG "$@"; }
-event()  { log EVENT "$@"; }
-fatal()  {
-    code="$1"
-    shift
-    log FATAL "$@"
-    exit ${code}
-}
-
+die() { log fatal "${2}"; exit "${1}"; }
+ereturn() { log error "${2}"; return "${1}"; }
 require() {
 	if ! [ -x "$(which "${1}")" ]; then
-		error "'${1}' is required but not installed"
-		exit 1
+		ereturn 1 "'${1}' is required but not installed"
 	fi
 }
-
-# NOTE: predefined some variables so bash doesn't get grumpy
-BOT_AUTH=""
-BOT_AGENT=""
-API=""
 api() {
 	# TODO: Implement caching
-	[ -z "${1}" ]         && error "No method for request"      && exit 1
-	[ -z "${2}" ]         && error "No endpoint for request"    && exit 2
-	[ -z "${BOT_AUTH}" ]  && error "Authorization not defined"  && exit 3
-	[ -z "${BOT_AGENT}" ] && error "Bot User-Agent not defined" && exit 4
+	[ -z "${1}" ]         && ereturn 1 "No method for request"
+	[ -z "${2}" ]         && ereturn 2 "No endpoint for request"
+	[ -z "${BOT_AUTH}" ]  && ereturn 3 "Authorization not defined"
+	[ -z "${BOT_AGENT}" ] && ereturn 4 "Bot User-Agent not defined"
 	debug "${1} to ${2} $([ -n "${3}" ] && echo "with ${3}")"
 	curl -X "${1}" -s -H "${BOT_AUTH}" -A "${BOT_AGENT}" "${API}${2}" $([ -n "${3}" ] && echo "-d ${3}")
-	[ $? -eq 0 ] || error "${1} Request to '${2}' failed" 
+	[ $? -eq 0 ] || log error "${1} Request to '${2}' failed" 
 }
 
 ################
@@ -81,11 +61,7 @@ FIFO_PATH="/tmp/bashcord.fifo"
 # Default pre_init.
 #
 _pre_init() {
-	event "Starting Bashcord..."
-}
-
-pre_init() {
-	sleep 1
+	log event "Starting Bashcord..."
 }
 
 # Default init.
@@ -95,11 +71,7 @@ _init() {
     if [ -z "${name}" ]; then
         fatal 1 "Cannot reach server"
     fi
-    inform "Connecting as... ${name}"
-}
-
-init() {
-	sleep 1
+    log info "Connecting as... ${name}"
 }
 
 # Setup some things and connect to the Discord API.
@@ -109,29 +81,24 @@ connect() {
 	[ -z "${API_TOKEN}" ] && error "API token not set" && exit
 	API_TOKEN="$(cat token)"
 	BOT_AUTH="Authorization: ${API_TOKEN}" 
-	debug "${BOT_AUTH}"
+	log debug "${BOT_AUTH}"
 	if [ -z "${API_VERSION}" ]; then
 		API="https://discordapp.com/api"
 	else
-		inform "Using API v${API_VERSION}"
+		log info "Using API v${API_VERSION}"
 		API="https://discordapp.com/api/v${API_VERSION}"
 	fi
 	BOT_AGENT="DiscordBot (${BOT_URL}, ${BOT_VERSION})"
-	debug "User-Agent: ${BOT_AGENT}"
+	log debug "User-Agent: ${BOT_AGENT}"
 	if type init | grep -q "function"; then init; else _init; fi
 	SOCKET_URL="$(api GET /gateway | jq .url -r)"
-	timeout=1
-	if [ -e "${FIFO_PATH}" ]; then inform "Stealing old FIFO"; else inform "New FIFO" && mkfifo -m 600 "${FIFO_PATH}"; fi
-	export BASHCORD_RESPONSE
-	while {
-		read -r BASHCORD_RESPONSE &
-		sleep $timeout
-		pkill $!	
-	} || true; do
-		response="${BASHCORD_RESPONSE}"
+	if [ -e "${FIFO_PATH}" ]; then log info "Stealing old FIFO"; else log info "New FIFO" && mkfifo -m 600 "${FIFO_PATH}"; fi
+	while read -r response -t 1 || true; do
 		if [ -z "$response" ]; then
-			error "No response"
+			log error "No response"
 		fi
 		echo "$response"
-	done <"${FIFO_PATH}" | echo "websocat \"${SOCKET_URL}\"" >"${FIFO_PATH}"
+	done <"${FIFO_PATH}" | websocat "${SOCKET_URL}" >"${FIFO_PATH}"
 }
+
+log debug "I'm retard"
