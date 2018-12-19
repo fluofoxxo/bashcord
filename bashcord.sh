@@ -16,7 +16,7 @@ log() {
 		info) c="32"  ;;
 		debug)c="34"  ;;
 	esac
-	printf "%s \033[%sm%-6s\033[m %s\n" "$(date +%T)" "${c}" "${1}" "${2}"
+	printf "%s \033[%sm%-6s\033[m %s\n" "$(date +%T)" "${c}" "${1}" "${2}" >&2
 }
 
 die() { log fatal "${2}"; exit "${1}"; }
@@ -58,14 +58,17 @@ FIFO_PATH="/tmp/bashcord.fifo"
 
 # Default pre_init.
 #
-_pre_init() { log event "Starting Bashcord..."; }
+_pre_init() {
+	log event "Starting Bashcord...";
+}
 
 # Default init.
 #
 _init() {
     name="$(api GET /users/@me | jq .username -r)"
     if [ -z "${name}" ]; then
-        fatal 1 "Cannot reach server"
+        die 1 "Cannot reach server, please check authorization token and try again \
+if the problem persists, please open an issue at https://github/com/0xfi/bashcord"
     fi
     log info "Connecting as... ${name}"
 }
@@ -88,7 +91,13 @@ connect() {
 	log debug "User-Agent: ${BOT_AGENT}"
 	[ "$(type -t init 2>/dev/null)" == "function" ] && init || _init
 	SOCKET_URL="$(api GET /gateway | jq .url -r)"
-	if [ -e "${FIFO_PATH}" ]; then log info "Stealing old FIFO"; else log info "New FIFO" && mkfifo -m 600 "${FIFO_PATH}"; fi
+	log debug "Socket: ${SOCKET_URL}"
+	if [ -e "${FIFO_PATH}" ]; then
+		log info "Stealing old FIFO"
+	else
+		log info "New FIFO"
+		mkfifo -m 600 "${FIFO_PATH}"
+	fi
 	while read -r -t 1 response || true; do
 		[ -z "$response" ] && log error "No response..."
 		log debug ">> $response"

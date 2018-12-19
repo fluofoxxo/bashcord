@@ -8,10 +8,9 @@ API_TOKEN="$(cat token)"
 BOT_VERSION="2.1"
 
 init() {
-	_init # recommended
-	debug "Got $(api GET "/users/@me")"
-	debug "Got $(api GET "/users/200006477677723648")"
+	_init # recommended, runs the default _init first
+	log debug "Got $(api GET "/users/@me")"
+	log debug "Got $(api GET "/users/200006477677723648")"
 }
 
-log info "Testing!"
 connect
