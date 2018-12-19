@@ -1,7 +1,7 @@
 #!/bin/bash
 # bot.sh - example bashcord bot
 
-. ../bashcord.sh
+source bashcord.sh
 LOG_LEVEL=$e_all
 BOT_URL="https://discordapp.com/developers"
 API_TOKEN="$(cat token)"
@@ -13,5 +13,5 @@ init() {
 	debug "Got $(api GET "/users/200006477677723648")"
 }
 
-log INFO "Testing!"
+log info "Testing!"
 connect

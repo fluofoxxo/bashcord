@@ -1,6 +1,5 @@
 #!/bin/bash
 # bashcord - shell script Discord API wrapper
-# despite the name, it *should* be all POSIX SH except for the usage of read
 
 ###########
 # Utility #
@@ -17,24 +16,30 @@ log() {
 		info) c="32"  ;;
 		debug)c="34"  ;;
 	esac
-	tag="\033[${c}m${1}\033[m"
-	${LOGGING_NOCOLOR} && tag="${1}"
-	printf "$(date +%T) [${tag}] ${2}\n"
+	printf "%s \033[%sm%-6s\033[m %s\n" "$(date +%T)" "${c}" "${1}" "${2}"
 }
+
 die() { log fatal "${2}"; exit "${1}"; }
-ereturn() { log error "${2}"; return "${1}"; }
+
 require() {
-	if ! [ -x "$(which "${1}")" ]; then
-		ereturn 1 "'${1}' is required but not installed"
+	for p in "${@}"; do
+		if ! [ -x "$(which "${p}")" ]; then
+			programs="${programs} ${p}"
+		fi
+	done
+	if [ -n "${programs}" ]; then 
+		log error "Requirement(s) not installed:${programs}"
+	else
+		log info "All requirements met"
 	fi
 }
+
 api() {
-	# TODO: Implement caching
-	[ -z "${1}" ]         && ereturn 1 "No method for request"
-	[ -z "${2}" ]         && ereturn 2 "No endpoint for request"
-	[ -z "${BOT_AUTH}" ]  && ereturn 3 "Authorization not defined"
-	[ -z "${BOT_AGENT}" ] && ereturn 4 "Bot User-Agent not defined"
-	debug "${1} to ${2} $([ -n "${3}" ] && echo "with ${3}")"
+	[ -z "${1}" ]         && log error "No method for request" && return 1
+	[ -z "${2}" ]         && log error "No endpoint for request" && return 1
+	[ -z "${BOT_AUTH}" ]  && log error "Authorization not defined" && return 1
+	[ -z "${BOT_AGENT}" ] && log error "Bot User-Agent not defined" && return 1
+	log debug "${1} to ${2} $([ -n "${3}" ] && echo "with ${3}")"
 	curl -X "${1}" -s -H "${BOT_AUTH}" -A "${BOT_AGENT}" "${API}${2}" $([ -n "${3}" ] && echo "-d ${3}")
 	[ $? -eq 0 ] || log error "${1} Request to '${2}' failed" 
 }
@@ -42,9 +47,7 @@ api() {
 ################
 # Requirements #
 ################
-require curl     # Packaged pretty universally, pre-installed on most systems
-require jq       # Usually packaged.
-require websocat # Sometimes packaged.
+require curl jq websocat
 
 ############
 # Defaults #
@@ -55,9 +58,7 @@ FIFO_PATH="/tmp/bashcord.fifo"
 
 # Default pre_init.
 #
-_pre_init() {
-	log event "Starting Bashcord..."
-}
+_pre_init() { log event "Starting Bashcord..."; }
 
 # Default init.
 #
@@ -72,7 +73,7 @@ _init() {
 # Setup some things and connect to the Discord API.
 #
 connect() {
-	if echo "$(type pre_init)" | grep -q "function"; then pre_init; else _pre_init; fi
+	[ "$(type pre_init 2>/dev/null)" == "function" ] && pre_init || _pre_init
 	[ -z "${API_TOKEN}" ] && error "API token not set" && exit
 	API_TOKEN="$(cat token)"
 	BOT_AUTH="Authorization: ${API_TOKEN}" 
@@ -80,20 +81,16 @@ connect() {
 	if [ -z "${API_VERSION}" ]; then
 		API="https://discordapp.com/api"
 	else
-		log info "Using API v${API_VERSION}"
+		log info "Using API v${API_VERSION}"B
 		API="https://discordapp.com/api/v${API_VERSION}"
 	fi
 	BOT_AGENT="DiscordBot (${BOT_URL}, ${BOT_VERSION})"
 	log debug "User-Agent: ${BOT_AGENT}"
-	if type init | grep -q "function"; then init; else _init; fi
+	[ "$(type -t init 2>/dev/null)" == "function" ] && init || _init
 	SOCKET_URL="$(api GET /gateway | jq .url -r)"
 	if [ -e "${FIFO_PATH}" ]; then log info "Stealing old FIFO"; else log info "New FIFO" && mkfifo -m 600 "${FIFO_PATH}"; fi
-	while read -r response -t 1 || true; do
-		if [ -z "$response" ]; then
-			log error "No response"
-		fi
-		echo "$response"
+	while read -r -t 1 response || true; do
+		[ -z "$response" ] && log error "No response..."
+		log debug ">> $response"
 	done <"${FIFO_PATH}" | websocat "${SOCKET_URL}" >"${FIFO_PATH}"
 }
-
-log debug "I'm retard"
