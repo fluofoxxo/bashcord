@@ -9,5 +9,5 @@ start() {
 	configure
 	connect
 	receiver &
-	ticker &
+	pulse &
 }
