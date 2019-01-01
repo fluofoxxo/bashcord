@@ -39,38 +39,14 @@ version that Discord provides.
 
 ## Usage
 ### Logging
-The logging function is still WIP and does not currently support writing to
-a log file that can be separate from the standard output stream. Calling the
-`log` function takes two parameters. The first of these parameters is the
-"log level" of the script. The standard levels are `ERROR, WARNING, INFO,
-DEBUG, EVENT`, however, *any* string can be passed to the log level, but it
-will not have any custom properties with it.
+This is currently heavily WIP, don't expect stable documentation for a long
+while.
 ```Debug
+log fatal "This is a fatal error message"
 log error "This is an error"
 log warning "This is a warning"
-log info "This is information"
-log event "This is an event"
 log debug "This is a debug message"
-log whatever "This is a random message"
 ```
-The second argument is a
-string which is used as the payload to the logging message. There are also
-several aliases that make the usage of the logging functions more intuitive:
-```Bash
-alias error="log error"
-alias warn="log warning"
-alias inform="log info"
-alias debug="log debug"
-alias event="log event"
-```
+The second argument is a string which is used as the payload to the logging message.
 
-### The `api` Function
-Using the `api` function is extremely simple. To make an HTTP request to an
-endpoint of the Discord API. To make a request using the `api` function
-there are two important parameters. First, the HTTP request method is
-specified (GET, DELETE, PUT, PATCH, POST, etc.).
-```Bash
-api GET /users/@me
-```
-This function is reserved to use with HTTP requests and has no bearing on
-connecting to the websocket for real-time Discord interaction.
+### `rest`

@@ -1,4 +1,0 @@
-dispatch() { :; }
-heartbeat() { :; }
-reconnect() { :; }
-hello() { :; }
