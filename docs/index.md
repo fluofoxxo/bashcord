@@ -1,8 +1,3 @@
-<div align="center">
-    <h1>Bashcord</h1>
-    Humanity's greatest sin.
-</div>
-
 # Table of Contents
 
 - [Table of Contents](#table-of-contents)
