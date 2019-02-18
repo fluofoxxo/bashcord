@@ -1,18 +1,15 @@
-@MODULE "REST API utilities"
-
-api:init() {
+rest.init() {
     if [ -z "${API_TOKEN}" ]; then
         log fatal "API_TOKEN not set"
         exit 1
     fi
     API_BASE="${1:-https://discordapp.com/api}"
-    API_BOT_URL="${2:-https://github.com/trvv/bashcord}"
-    API_BOT_VER="${3:-1.0}"
-    API_AGENT="DiscordBot (${API_BOT_URL}, ${API_BOT_VER})"
+    API_AGENT= \
+"DiscordBot (${API_BOT_URL:-github.com/trvv/bashcord}, ${API_BOT_VER:-1.0})"
     export API_BASE API_TOKEN API_BOT_URL API_BOT_VER API_AGENT
 }
 
-api() {
+rest() {
     url="${API_BASE}${2}"
     log debug "${1} ${2}"
     exec 3>&1
