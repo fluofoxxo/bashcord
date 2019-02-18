@@ -1,6 +1,5 @@
-#!/bin/bash
-source 'build/bashcord'
+#!/usr/bin/env bash
+source './bashcord/log.sh'
 
-me="$(api:me)"
-
-echo "Logging in as $(@ "${me}" .username)!"
+log failure "The big error"
+log success "The big fix"
