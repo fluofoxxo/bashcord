@@ -14,10 +14,12 @@ the important settings through some basic information.
     - Defaults to `1.0`
 * `API_AGENT` is the User-Agent provided to the API
 
+## API core functions
+
 ### `api:init`
 ```
 $1 -> API_BASE
-$2 -> API_TOKEN
+$2 -> API_TOKEN+
 $3 -> API_BOT_URL*
 $4 -> API_BOT_VER*
 
@@ -27,3 +29,13 @@ $4 -> API_BOT_VER*
 ### `api:request`
 Send a request to the Discord API, `api:init` should be called first unless
 you want to manually set all of the important variables... which is stupid
+
+#### `api:get`
+
+#### `api:delete`
+
+#### `api:post`
+
+#### `api:put`
+
+#### `api:patch`
