@@ -1,4 +1,9 @@
-rest.init() {
+module: rest "REST API wrappers and helpers"
+
+method: init "Initializes the REST API's configuration variables
+- Requires `API_TOKEN` to be set before calling
+- Takes one (optional) argument to set the base used by the REST API"
+REST:init() {
     if [ -z "${API_TOKEN}" ]; then
         log fatal "API_TOKEN not set"
         exit 1
@@ -9,7 +14,9 @@ rest.init() {
     export API_BASE API_TOKEN API_BOT_URL API_BOT_VER API_AGENT
 }
 
-rest() {
+alias: R REST:request
+method: request "Send a request to the REST API."
+REST:request() {
     url="${API_BASE}${2}"
     log debug "${1} ${2}"
     exec 3>&1

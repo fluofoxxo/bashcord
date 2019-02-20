@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
-source './bashcord/log.sh'
-
-#exec 8>/dev/null
+source bashcord
 
 log unknown "This is an unknown message"
 log debug "This is a debug message"

@@ -14,6 +14,7 @@
     - [`LOG_TAGS`](#logtags)
     - [`LOG_TAG_VARIANT`](#logtagvariant)
     - [`log()`](#log)
+    - [`die()`](#die)
   - [JSON](#json)
   - [API](#api)
     - [REST](#rest)
@@ -105,6 +106,11 @@ Usage:
 ```
 
 `log` outputs into two streams, `8` and `9` which are explained [here](#logging-streams). It's usage is identical with `printf`'s (the CLI invocation at least), except for the fact that the format string is the second argument and the first is instead the severity level (in string form) that the message should be logged at. If an unknown level string is provided the `unknown` tag will be used to indicate the message and won't be logged unless the [`LOG_LEVEL`](#log-level) is set to `all`.
+
+### `die()`
+
+Works like log except the level is always `fatal` and the first argument is
+an exit code, not a level.
 
 ## JSON
 
