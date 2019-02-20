@@ -45,6 +45,35 @@ tests)
         printf "\033[31;1m :(\033[m\n"
     fi
     ;;
+    
+overview)
+    $0 $NAME
+    source $NAME
+    for module in "${!MODULES[@]}"; do
+        case "$module" in
+        *':name')
+            name="${MODULES[$module]}"
+            printf "\033[34;1m%-10s\033[m \033[2;3m%s\033[m\n" \
+                "$name" "${MODULES[$name:desc]}"
+            for global in "${!GLOBALS[@]}"; do
+                case "$global" in
+                $name':'*':name')
+                    printf "    - %s\n" "${GLOBALS[$global]}"
+                ;;
+                esac
+            done
+            for method in "${!METHODS[@]}"; do
+                case "$method" in
+                $name':'*':name')
+                    printf "    - \033[1m%s\033[m()\n" \
+                        "${METHODS[$method]}"
+                    ;;
+                esac
+            done
+            ;;
+        esac
+    done
+    ;;
 
 clean)
     rm -f $NAME

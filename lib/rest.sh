@@ -1,5 +1,10 @@
 module: rest "REST API wrappers and helpers"
 
+global: API_TOKEN "Access token for the Discord API"
+global: API_BASE "Base URL for the API, set by REST:init (defaults to )"
+global: API_BOT_VER ""
+global: API_AGENT "User-Agent header generated from API_BOT_URL and API_BOT_VER"
+
 method: init 'Initializes the REST API`s configuration variables
 - Requires `API_TOKEN` to be set before calling
 - Takes one (optional) argument to set the base used by the REST API'
@@ -8,9 +13,9 @@ REST:init() {
         log fatal "API_TOKEN not set"
         exit 1
     fi
-    API_BASE="${1:-https://discordapp.com/api}"
+    API_BASE="${1:=https://discordapp.com/api}"
     API_AGENT= \
-"DiscordBot (${API_BOT_URL:-github.com/trvv/bashcord}, ${API_BOT_VER:-1.0})"
+"DiscordBot (${API_BOT_URL:=github.com/trvv/bashcord}, ${API_BOT_VER:=1.0})"
     export API_BASE API_TOKEN API_BOT_URL API_BOT_VER API_AGENT
 }
 

@@ -77,7 +77,7 @@ log:log() {
     local tag="${LOG_TAGS[$level]}"
     [ -z "$tag" ] && tag="${LOG_TAGS[default]}"
     shift 2
-    printf "%s|%-10s|$fmt\n" "$(date +"%Y-%m-%d %H:%M:%S.%N")" "$level" "$@" | \
+    printf "%s|%-7s|$fmt\n" "$(date +"%Y-%m-%d %H:%M:%S.%N")" "$level" "$@" | \
         tr -cd '[:print:]\r\n' >&9
     printf "%s %b $fmt\n" "$(date +"%Y-%m-%d %H:%M:%S.%N")" "$tag" "$@" >&8
 }
