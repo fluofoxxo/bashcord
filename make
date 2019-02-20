@@ -22,12 +22,13 @@ tiny)
 
 tests)
     $0 $NAME
+    rm -f tests.log
     i=0
     j=0
     for tst in tests/*; do
         printf "\033[34;1m->\033[m %s... " "$tst"
         (( i++ ))
-        $tst 2>tests.log
+        bash -e $tst 2>>tests.log
         if [ $? -eq 0 ]; then
             printf "\033[32;1mok\033[m\n"
             (( j++ ))

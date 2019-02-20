@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 source bashcord
 
+exec 8>/dev/null
+exec 9>&2
+
 log unknown "This is an unknown message"
 log debug "This is a debug message"
 log info "This is an information messsage"

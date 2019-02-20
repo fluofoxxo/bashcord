@@ -1,4 +1,4 @@
-module: log "Logging utilities and management"
+module: log 'Logging utilities and management'
 
 RESET='\033[0m'
 BOLD='\033[1m'
@@ -14,7 +14,7 @@ WHITE='\033[37m'
 declare -A LOG_LEVELS
 declare -A LOG_TAGS
 
-global: LOG_LEVELS "Levels of importance for logged messages
+global: LOG_LEVELS 'Levels of importance for logged messages
 |name   |level|notes             |
 |-------|-----|------------------|
 |none   |0    |**DO NOT USE**    |
@@ -24,7 +24,7 @@ global: LOG_LEVELS "Levels of importance for logged messages
 |success|300  |                  |
 |info   |350  |Nothing dangerous |
 |debug  |400  |Debug info only   |
-|all    |1000 |**DO NOT USE**    |"
+|all    |1000 |**DO NOT USE**    |'
 LOG_LEVELS=(
     [none]=0
     [fatal]=100
@@ -36,21 +36,21 @@ LOG_LEVELS=(
     [all]=1000
 )
 
-global: LOG_LEVEL "Maximum message level to permit
+global: LOG_LEVEL 'Maximum message level to permit
 Because of how the logging system is structured the higher the level the lower
-The actual importance of the message is, sorry, maybe I'll fix it someday"
+The actual importance of the message is, sorry, maybe I`ll fix it someday'
 LOG_LEVEL=all
 
-GLOBAL LOG_TAGS "Tags for indicating log message importance
-|name   |tag    |color      |
-|-------|-------|-----------|
-|fatal  |[FATAL]|magenta    |
-|error  |[ERROR]|bold-red   |
-|warning|[WARN] |bold-yellow|
-|success|[OK]   |bold-green |
-|info   |[INFO] |bold-cyan  |
-|debug  |[DEBUG]|bold-blue  |
-|default|[?????]|grey       |"
+global: LOG_TAGS 'Tags for indicating log message importance
+|name   |tag      |color      |
+|-------|---------|-----------|
+|fatal  |`[FATAL]`|magenta    |
+|error  |`[ERROR]`|bold-red   |
+|warning|`[WARN] `|bold-yellow|
+|success|`[OK]   `|bold-green |
+|info   |`[INFO] `|bold-cyan  |
+|debug  |`[DEBUG]`|bold-blue  |
+|default|`[?????]`|grey       |'
 LOG_TAGS=(
     [fatal]="$MAGENTA[FATAL]$RESET"
     [error]="$BOLD$RED[ERROR]$RESET"
@@ -65,11 +65,11 @@ exec 8>&2
 exec 9>/dev/null
 
 alias: log log:log
-method: log "Logging messages
+method: log 'Logging messages
 Works like `printf(1)`, except there is a prepended argument that is the
 importance of the message. This level a key from LOG_LEVELS excluding `all` and
 `none` which are pseudo-levels designed to be used with LOG_LEVEL to permit all
-messages or none of the messages."
+messages or none of the messages.'
 log:log() {
     local level="$1"
     [ ${LOG_LEVELS[$level]:-1000} -gt ${LOG_LEVELS[$LOG_LEVEL]} ] && return
@@ -83,10 +83,9 @@ log:log() {
 }
 
 alias: die log:die
-method: die "Log fatal before exiting
+method: die 'Log fatal before exiting
 Works exactly like `log.log()` except that no level need be provided because it
-only uses the `fatal` level.
-"
+only uses the `fatal` level.'
 log:die() {
     local fmt="${1:-A fatal error occured}"
     shift

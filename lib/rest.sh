@@ -1,8 +1,8 @@
 module: rest "REST API wrappers and helpers"
 
-method: init "Initializes the REST API's configuration variables
+method: init 'Initializes the REST API`s configuration variables
 - Requires `API_TOKEN` to be set before calling
-- Takes one (optional) argument to set the base used by the REST API"
+- Takes one (optional) argument to set the base used by the REST API'
 REST:init() {
     if [ -z "${API_TOKEN}" ]; then
         log fatal "API_TOKEN not set"
