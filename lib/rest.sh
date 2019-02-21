@@ -2,7 +2,8 @@ module: rest "REST API wrappers and helpers"
 
 global: API_TOKEN "Access token for the Discord API"
 global: API_BASE "Base URL for the API, set by REST:init (defaults to )"
-global: API_BOT_VER ""
+global: API_BOT_VER "Bot version that is passed to the API, doesn't effect usage"
+global: API_BOT_URL "'Home' URL for the bot that is passed to the API, doesn't effect usage"
 global: API_AGENT "User-Agent header generated from API_BOT_URL and API_BOT_VER"
 
 method: init 'Initializes the REST API`s configuration variables

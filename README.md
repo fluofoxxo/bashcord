@@ -4,9 +4,9 @@
 documentation](https://trvv.github.io/bashcord)
 
 # TODO
-- [ ] Finish documenting the REST API configuration variables
-- [ ] Implement documentation for the _doc module
-- [ ] Fully implement documentation generation (with _doc)
+- [x] Finish documenting the REST API configuration variables
+- [ ] ~~Implement documentation for the _doc module~~
+- [ ] *Fully implement documentation generation (with _doc)*
 - [ ] Add JSON parsing
 - [ ] Add REST API endpoint file (maybe function, but probably not)k
 - [ ] Add WebSocket support
