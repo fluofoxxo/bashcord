@@ -1,2 +1,4 @@
 #!/usr/bin/env bash
-source bashcord
+source bashcord.sh
+
+start_client

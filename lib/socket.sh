@@ -1,1 +1,0 @@
-module: socket "WebSocket API wrappers and helpers"
