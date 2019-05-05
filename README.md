@@ -1,39 +1,25 @@
 # bashcord
 
-***please help me***
+***right now this is abandoned, sorry... I'm having some serious difficulty
+putting together any motivation to work on something as hideous as the
+Discord API and I genuinely dislike the direction this project was going in,
+so yeah. Sorry to any people that wanted me to finish it, if anyone actually
+decides to help and contribute I might put some effort in but for now it's
+done.***
 
-## Setup
+## Functions
 
-Run:
-```
-$ git clone https://github.com/trvv/bashcord
-$ cd bashcord
-# make install
-```
-and then you can
-```
-$ bashcord
-```
-to start the bashcord shell.
+### `configure()`
 
-## Usage
+Configure internal Discord things
 
-### As a CLI tool
+### `connect()`
 
-Just run bashcord man... idk...
+Connect to the Discord API and begin handling events.
 
-### As a library
+|Exit|Reason                                 |
+|----|---------------------------------------|
+|0   |Succesful connection.                  |
+|1   |Failed connection.                     |
+|2   |Succesful connection eventually failed.|
 
-Once installed, add
-```Bash
-source /bin/bashcord
-# ...
-connect
-```
-which will provide the internal bashcord tools to your script, and adding
-event handlers and variable configuration can be done before calling
-`connect`.
-
-## Credits
-
-my rapid descent into insanity and self-hatred.
