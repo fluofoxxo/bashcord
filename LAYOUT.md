@@ -10,25 +10,23 @@ subject of review and development.
 #!/usr/bin/env bash
 source $(which bashcord)
 
-bc-config BOT_TOKEN   "..."
-bc-config BOT_NAME    "greg"
-bc-config BOT_VERSION "1.0"
-bc-config API_VERSION "7"
+bc["token"]="Bot ..."
+bc["bot_name"]="greg"
+bc["bot_version"]="1.0"~
 
 # $1 channel
 # $2 guild
 # $3 sender
 # $4 body
 # $5 embed(?)
-
-function bc-onMessage() {
-	bc-message $2/$1 "who dare challenge me"
+function on_message {
+	message $2/$1 "who dare challenge me"
 }
 
-function bc-onConnect() {
-	bc-status online playing "with myself"
-	bc-message @owner "I'm online, btw"
+function on_connect {
+	status online playing "with myself"
+	message @owner "I'm online, btw"
 }
 
-bc-start
+start
 ```
