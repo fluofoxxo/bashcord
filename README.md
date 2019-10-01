@@ -1,4 +1,4 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/trvv/bashcord/master/bashcord.svg">
+  <img src="./bashcord.svg">
   <br>coming soon...
 </div>
