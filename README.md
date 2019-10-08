@@ -1,4 +1,6 @@
-<img align="center" width="200px" src="docs/bashcord.png">
+<div align="center">
+    <img align="center" width="400px" src="docs/bashcord.png">
+</div>
 
 # contents
 
