@@ -1,4 +1,4 @@
-![bashCord logo](docs/bashcord.png)
+<img align="center" width="200px" src="docs/bashcord.png">
 
 # contents
 
