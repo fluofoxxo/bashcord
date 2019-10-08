@@ -6,8 +6,8 @@
 1. [introduction](#introduction)
 2. [history](#history)
 3. [quickstart](#quickstart)
-  a. [for scripts](#for-scripts)
-  b. [for cli](#for-cli)
+    1. [for scripts](#for-scripts)
+    2. [for cli](#for-cli)
 4. [more](#more)
 5. [greetz to](#greetz-to)
 
