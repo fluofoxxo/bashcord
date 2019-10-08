@@ -1,6 +1,6 @@
 ![bashCord logo](docs/bashcord.png)
 
-## contents
+# contents
 
 0. [contents](#contents)
 1. [introduction](#introduction)
@@ -11,7 +11,7 @@
 4. [more](#more)
 5. [greetz to](#greetz-to)
 
-## introduction
+# introduction
 
 bashCord is a script written in *pure* Bash to interface with the Discord
 API. Its purpose is for both use in other scripts and as a command line
@@ -19,7 +19,7 @@ interface to interact with the API (possibly as a client, but I believe that
 as a client it would be terrible to use, though it could theoretically be
 used to implement one).
 
-## history
+# history
 
 SKIP THIS SECTION IF YOU DON'T LIKE RAMBLING:
 
@@ -32,20 +32,20 @@ started a nearly 6-month hiatus from the project which ends in this attempt.
 This should be the last one, I made a logo to encourage myself and I even
 sat down in a coffee shop to write this instead of my bed.
 
-## installing
+# installing
 
 To install bashCord: clone the repository
 (`https://github.com/trvv/bashcord`), run `make install` in its root. The
 command `bashcord` should then be available.
 
-## quickstart
+# quickstart
 
 As stated in the [introduction](#introduction), bashCord is designed as both
 an API testing tool and as a "library" for writing other scripts that
 interact with Discord. Therefore, there are two primary ways of using
 bashCord: [for scripts](#for-scripts) and [for cli](#for-cli).
 
-### for scripts
+## for scripts
 
 When writing scripts, bashCord can be sourced in two ways. One, using the
 [regular install method](#installing), and one by wgetting/curling the
@@ -72,12 +72,12 @@ if [ ! -f ./bashcord ]; then
 fi
 ```
 
-### for cli
+## for cli
 
 To setup for the CLI, all you need is to follow the [install
 guide](#installing) and run `bashcord`.
 
-### more
+# more
 
 This README is fairly bare, it's better that way in my opinion. If you want
 more information about using bashcord, checkout [the
@@ -85,7 +85,7 @@ website](https://bashcord.trvv.me). I'm fairly active on the r/unixporn
 Discord server if you want to find me and ask about the project or you
 could always [email me](mailtio:tom@trvv.me).
 
-### greetz to
+# greetz to
 
 - [diamondburned](https://diamondb.xyz)
 - [dylan](https://github.com/dylanaraps)
