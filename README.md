@@ -1,4 +1,4 @@
-![bashCord logo](res/bashcord.png)
+![bashCord logo](docs/bashcord.png)
 
 ## contents
 
