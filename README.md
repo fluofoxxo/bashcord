@@ -8,3 +8,10 @@
     <h6><a href="https://github.com/discordapp">@discordapp</a> in the
         shell(script)</h6>
 </div>
+
+bashCord depends on [jq](https://stedolan.github.io/jq/),
+[cURL](https://curl.haxx.se/), [websocat](https://github.com/vi/websocat),
+and Bash 4.2+. Hopefully over time these dependencies slowly fade away as
+I'm able to rewrite them in pure Bash (less likely for cURL/websocat, more
+likely for jq) but for now they allow a good enough base without feeling too
+restrictive in their size/flow.
