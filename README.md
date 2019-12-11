@@ -4,7 +4,7 @@
     <img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/trvv/bashcord">
     <img alt="GitHub issues" src="https://img.shields.io/github/issues-raw/trvv/bashcord">
     <img alt="GitHub license" src="https://img.shields.io/github/license/trvv/bashcord">
-    <img alt="Discord" src="https://img.shields.io/discord/654243669464842240/654244636155445248">
+    <img alt="Discord" src="https://img.shields.io/discord/654243669464842240">
     <h6><a href="https://github.com/discordapp">@discordapp</a> in the
         shell(script)</h6>
 </div>
