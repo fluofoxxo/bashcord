@@ -100,6 +100,4 @@ team_icon_url() { team_icon_url_png "$1" "$2"; }
 team_icon_url_png() { cdn "team-icons/$1/$2.png"; }
 team_icon_url_jpg() { cdn "team-icons/$1/$2.jpg"; }
 team_icon_url_webp() { cdn "team-icons/$1/$2.webp"; }
-
-# SECTION :: Image Formatting
-format_image_data() { echo "data:image/$1;base64,$2"; }
+format_image_base64() { echo "data:image/$1;base64,$2"; }
