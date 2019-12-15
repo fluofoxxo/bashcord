@@ -27,11 +27,18 @@ likely end a bot's code. Otherwise it's still up for debate/discussion.
 - [x] File heading
 - [x] Basic configuration structure
 - [x] CDN endpoint wrapper functions
-- [ ] Message mention formatting helpers
+- [x] Message mention formatting helpers
 - [x] Logging
-- [ ] Fix log formatting for file output
-- [ ] Dependency checking
-- [ ] REST API helper (`api`)
-- [ ] Basic REST API endpoints to test
+- [x] Fix log formatting for file output
+- [x] Dependency checking
+- [x] REST API helper (`api`)
+- [x] Basic REST API endpoints to test
+- [ ] Move TODO to a project
+- [ ] Add a wrapper for CDN endpoints to download the targeted file
+- [ ] Add a wrapper to check whether a certain type exists for CDN wrappers
+- [ ] Start documenting! (See `docs/`)
+- [ ] Change the way requirements are done to respect configuration
+- [ ] Implement all of the REST API endpoints (autogen)
+- [ ] Standardized way to pull elements out of an object
 - [ ] Gateway loop
 - [ ] Gateway dispatch outline
