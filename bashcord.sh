@@ -1,5 +1,5 @@
 #!/usr/bin/env bash 
-
+#region :: Heading
        #####                #####
       ###       #########       ###
     #################################       ///////////////////////////////////
@@ -14,10 +14,12 @@
 #########   #################   #########   kind when working  on  the project.
     ######                     ######       ///////////////////////////////////
       #########           #########
+#endregion
 
-# SECTION :: Core Configuration
+#region :: Configuration
 declare -A bashcord=( 
 	[token]="$DISCORD_TOKEN"
+	[logging]=false
 	[logfile]="bashcord.$$.log"
 	[api_base]="https://discordapp.com/api"
 	[api_verion]="6"
@@ -26,31 +28,129 @@ declare -A bashcord=(
 	[cdn_base]="https://cdn.discordapp.com"
 	[gateway_version]="6"
 	[requirements]="jq curl websocat"
+	[debug]=false
 )
 
-# SECTION :: Logging
+get_configuration() {
+	for key in "${!bashcord[@]}"; do
+    	printf "$key=${bashcord[$key]}\n"
+	done
+}
+#endregion
+
+#region :: Logging
 log() {
 	local level=${1^^}; shift
 	case "$level" in
-	INFO) printf "\033[34;1mINFO\033[m  | ";;
-	WARNING) printf "\033[33;1mWARN\033[m  | ";;
-	ERROR) printf "\033[31;1mERROR\033[m | ";;
-	*) printf "\033[1m%-5s\033[m | ";;
+	DEBUG) printf "[\033[35;1mDEBUG\033[m] ";;
+	PANIC) printf "[\033[36;1mPANIC\033[m] ";;
+	EVENT) printf "[\033[34;1mEVENT\033[m] ";;
+	INFO) printf "[\033[32;1mINFO\033[m ] ";;
+	WARN) printf "[\033[33;1mWARN\033[m ] ";;
+	ERROR) printf "[\033[31;1mERROR\033[m] ";;
+	*) printf "[\033[1m%-5s\033[m] ";;
 	esac
-	printf "%-5s | " "$level" >>"${bashcord[logfile]}"
-	printf "%s | " "$(date +%f)" | tee -a "${bashcord[logfile]}"
-	printf "$@" | tee -a "${bashcord[logfile]}"
+	local fmt=${1}; shift
+	printf "$fmt\n" "$@" >&2
+	if ${bashcord[logging]}; then
+		printf "%-5s | %s | " "$level" "$(date +%f)" "$@" >>${bashcord[logfile]}
+	fi
 }
 
-# SECTION :: Requirements
-missing=()
-for requirement in ${bashcord[requirements]}; do
-	if ! command -v $requirement 2>/dev/null >&2; then
-		missing+=($requirement)
+debug() {
+	if ${bashcord[debug]}; then
+		log debug "$@"
 	fi
-done
-unset missing
+}
+#endregion
 
+#region :: Rest API helper
+get_agent() {
+	echo "DiscordBot (${bashcord[agent_url]}, ${bashcord[agent_version]})"
+}
+
+strcode() {
+	case $1 in
+	100) echo "Continue";;
+	101) echo "Switching Protocols";;
+	200) echo "OK";;
+	201) echo "Created";;
+	202) echo "Accepted";;
+	203) echo "Non-Authoritative Information";;
+	204) echo "No Content";;
+	205) echo "Reset Content";;
+	206) echo "Partial Content";;
+	300) echo "Multiple Choices";;
+	301) echo "Moved Permanently";;
+	302) echo "Found";;
+	303) echo "See Other";;
+	304) echo "Not Modified";;
+	305) echo "Use Proxy";;
+	306) echo "(Unused)";;
+	307) echo "Temporary Redirect";;
+	400) echo "Bad Request";;
+	401) echo "Unauthorized";;
+	402) echo "Payment Required";;
+	403) echo "Forbidden";;
+	404) echo "Not Found";;
+	405) echo "Method Not Allowed";;
+	406) echo "Not Acceptable";;
+	407) echo "Proxy Authentication Required";;
+	408) echo "Request Timeout";;
+	409) echo "Conflict";;
+	410) echo "Gone";;
+	411) echo "Length Required";;
+	412) echo "Precondition Failed";;
+	413) echo "Request Entity Too Large";;
+	414) echo "Request-URI Too Long";;
+	415) echo "Unsupported Media Type";;
+	416) echo "Requested Range Not Satisfiable";;
+	417) echo "Expectation Failed";;
+	500) echo "Internal Server Error";;
+	501) echo "Not Implemented";;
+	502) echo "Bad Gateway";;
+	503) echo "Service Unavailable";;
+	504) echo "Gateway Timeout";;
+	*) echo "(Unknown)";;
+	esac
+}
+
+strerr() { strcode $ERR; }
+
+declare -xi ERR=999
+api() {
+	local url=${bashcord[api_base]}$2
+	exec 3>&1
+    declare -xi ERR="$(curl -w '%{http_code}' -o >(cat >&3) -X "$1" -s \
+    	-H "Authorization: ${bashcord[token]}" -A "$(get_agent)" "$url" \
+    	$([[ "$3" ]] && echo "-d \"$3\" -H 'application/json'"))"
+	debug "'$1' request to '$2' responded with '$(strerr)' ($ERR)'"
+	if [ $ERR -ne 200 ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+#endregion
+
+#region :: Rest API endpoint wrappers
+avatar() { user_avatar_url_png "$(user $1 .id)" "$(user $1 .avatar)"; }
+
+user() {
+	local out=$(api GET /users/$1)
+	shift
+	if [[ "$1" ]]; then
+		echo "$out" | jq -r "$@"
+	else
+		echo "$out" | jq
+	fi
+}
+
+me() { user @me "$@"; }
+
+#endregion
+
+#region :: Message Formatting
 # SECTION :: Message Formatting
 mention_user() { echo "<@$1>"; }
 mention_nick() { echo "<@!$1>"; }
@@ -58,13 +158,14 @@ mention_channel() { echo "<#$1>"; }
 mention_role() { echo "<@&$1>"; }
 mention_emoji() { echo "<:$1:$2>"; }
 mention_aemoji() { echo "<a:$1:$2>"; }
+#endregion
 
-# SECTION :: CDN Requests
+#region :: CDN Requests
 cdn() { echo "${bashcord[cdn_base]}/$1"; }
 emoji_url() { emoji_url_gif "$1"; }
 emoji_url_png() { cdn "emojis/$1.png"; }
 emoji_url_gif() { cdn "emojis/$1.gif"; }
-guild_icon_url() { guild_icon_url_gif "$1" "$2"; }
+guild_icon_url() { guild_icon_url_png "$1" "$2"; }
 guild_icon_url_png() { cdn "icons/$1/$2.png"; }
 guild_icon_url_jpg() { cdn "icons/$1/$2.jpg"; }
 guild_icon_url_webp() { cdn "icons/$1/$2.webp"; }
@@ -79,7 +180,7 @@ guild_banner_url_jpg() { cdn "banners/$1/$2.jpg"; }
 guild_banner_url_webp() { cdn "banners/$1/$2.webp"; }
 default_user_avatar_url() { default_user_avatar_url_png "$1"; }
 default_user_avatar_url_png() { cdn "embed/avatars/$1.png"; }
-user_avatar_url() { user_avatar_url_gif "$1" "$2"; }
+user_avatar_url() { user_avatar_url_png "$1" "$2"; }
 user_avatar_url_png() { cdn "avatars/$1/$2.png"; }
 user_avatar_url_jpg() { cdn "avatars/$1/$2.jpg"; }
 user_avatar_url_webp() { cdn "avatars/$1/$2.webp"; }
@@ -101,3 +202,17 @@ team_icon_url_png() { cdn "team-icons/$1/$2.png"; }
 team_icon_url_jpg() { cdn "team-icons/$1/$2.jpg"; }
 team_icon_url_webp() { cdn "team-icons/$1/$2.webp"; }
 format_image_base64() { echo "data:image/$1;base64,$2"; }
+# endregion
+
+#region :: Requirements
+missing=""
+for requirement in ${bashcord[requirements]}; do
+	if ! command -v $requirement 2>/dev/null >&2; then
+		missing="$missing$requirement "
+	fi
+done
+if [[ "$missing" ]]; then
+	log ERROR "Missing command(s): $missing"
+fi
+unset missing
+#endregion
