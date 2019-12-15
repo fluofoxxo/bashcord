@@ -1,5 +1,5 @@
 #!/usr/bin/env bash 
-#region :: Heading
+
        #####                #####
       ###       #########       ###
     #################################       ///////////////////////////////////
@@ -14,7 +14,6 @@
 #########   #################   #########   kind when working  on  the project.
     ######                     ######       ///////////////////////////////////
       #########           #########
-#endregion
 
 #region :: Configuration
 declare -A bashcord=( 
@@ -151,7 +150,6 @@ me() { user @me "$@"; }
 #endregion
 
 #region :: Message Formatting
-# SECTION :: Message Formatting
 mention_user() { echo "<@$1>"; }
 mention_nick() { echo "<@!$1>"; }
 mention_channel() { echo "<#$1>"; }
@@ -202,7 +200,7 @@ team_icon_url_png() { cdn "team-icons/$1/$2.png"; }
 team_icon_url_jpg() { cdn "team-icons/$1/$2.jpg"; }
 team_icon_url_webp() { cdn "team-icons/$1/$2.webp"; }
 format_image_base64() { echo "data:image/$1;base64,$2"; }
-# endregion
+#endregion
 
 #region :: Requirements
 missing=""
