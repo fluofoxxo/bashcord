@@ -1,216 +1,152 @@
-#!/usr/bin/env bash 
+declare -Ax function_usage function_description
+declare token user_agent
+declare api_base=https://discord.com/api/v6
+declare ws_connected=false
 
-       #####                #####
-      ###       #########       ###
-    #################################       ///////////////////////////////////
-  #####################################      _           _   _____           _
-  #####################################     | |_ ___ ___| |_|     |___ ___ _| |
-  #########     #########     #########     | . | .'|_ -|   |  ---| . |  _| . |
-  #######         #####         #######     |___|__,|___|_|_|_____|___|_| |___|
-#########         #####         #########   tom [at] trvv.me
-###########     #########     ###########   https://doc.trvv.me/bashcord
-#########################################
-#########################################   please respect the LICENSE and stay
-#########   #################   #########   kind when working  on  the project.
-    ######                     ######       ///////////////////////////////////
-      #########           #########
+log() { printf "\033[35m<<\033[m %b\n" "$*" >&2; }
+fn() { function_usage[$1]=$2; function_description[$1]=$3; }
 
-#region :: Configuration
-declare -A bashcord=( 
-	[token]="$DISCORD_TOKEN"
-	[logging]=false
-	[logfile]="bashcord.$$.log"
-	[api_base]="https://discordapp.com/api"
-	[api_verion]="6"
-	[agent_url]="https://github.com/trvv/bashcord"
-	[agent_version]="1.33.7"
-	[cdn_base]="https://cdn.discordapp.com"
-	[gateway_version]="6"
-	[requirements]="jq curl websocat"
-	[debug]=false
-)
-
-get_configuration() {
-	for key in "${!bashcord[@]}"; do
-    	printf "$key=${bashcord[$key]}\n"
-	done
-}
-#endregion
-
-#region :: Logging
-log() {
-	local level=${1^^}; shift
-	case "$level" in
-	DEBUG) printf "[\033[35;1mDEBUG\033[m] ";;
-	PANIC) printf "[\033[36;1mPANIC\033[m] ";;
-	EVENT) printf "[\033[34;1mEVENT\033[m] ";;
-	INFO) printf "[\033[32;1mINFO\033[m ] ";;
-	WARN) printf "[\033[33;1mWARN\033[m ] ";;
-	ERROR) printf "[\033[31;1mERROR\033[m] ";;
-	*) printf "[\033[1m%-5s\033[m] ";;
-	esac
-	local fmt=${1}; shift
-	printf "$fmt\n" "$@" >&2
-	if ${bashcord[logging]}; then
-		printf "%-5s | %s | " "$level" "$(date +%f)" "$@" >>${bashcord[logfile]}
-	fi
+fn usage "%b [command]" "\
+Print specific command usage if provided, otherwise print a list of\n\
+commands."
+usage() {
+    if [ "$1" ]; then
+        if [ ! -v "function_usage[$1]" ]; then
+            printf "Command \033[33m$1\033[m not found\n" >&2
+            return
+        fi
+        printf "Usage: ${function_usage[$1]}\n\n" "\033[32m$1\033[m"
+        printf "${function_description[$1]}\n"
+    else
+        printf "Run '\033[32musage\033[m <command>' for more information about a command.\n\n"
+        for function in "${!function_usage[@]}"; do
+            printf "\033[36m--\033[m ${function_usage[$function]}\n" "\033[32m$function\033[m"
+        done
+    fi
 }
 
-debug() {
-	if ${bashcord[debug]}; then
-		log debug "$@"
-	fi
-}
-#endregion
-
-#region :: Rest API helper
-get_agent() {
-	echo "DiscordBot (${bashcord[agent_url]}, ${bashcord[agent_version]})"
-}
-
-strcode() {
-	case $1 in
-	100) echo "Continue";;
-	101) echo "Switching Protocols";;
-	200) echo "OK";;
-	201) echo "Created";;
-	202) echo "Accepted";;
-	203) echo "Non-Authoritative Information";;
-	204) echo "No Content";;
-	205) echo "Reset Content";;
-	206) echo "Partial Content";;
-	300) echo "Multiple Choices";;
-	301) echo "Moved Permanently";;
-	302) echo "Found";;
-	303) echo "See Other";;
-	304) echo "Not Modified";;
-	305) echo "Use Proxy";;
-	306) echo "(Unused)";;
-	307) echo "Temporary Redirect";;
-	400) echo "Bad Request";;
-	401) echo "Unauthorized";;
-	402) echo "Payment Required";;
-	403) echo "Forbidden";;
-	404) echo "Not Found";;
-	405) echo "Method Not Allowed";;
-	406) echo "Not Acceptable";;
-	407) echo "Proxy Authentication Required";;
-	408) echo "Request Timeout";;
-	409) echo "Conflict";;
-	410) echo "Gone";;
-	411) echo "Length Required";;
-	412) echo "Precondition Failed";;
-	413) echo "Request Entity Too Large";;
-	414) echo "Request-URI Too Long";;
-	415) echo "Unsupported Media Type";;
-	416) echo "Requested Range Not Satisfiable";;
-	417) echo "Expectation Failed";;
-	500) echo "Internal Server Error";;
-	501) echo "Not Implemented";;
-	502) echo "Bad Gateway";;
-	503) echo "Service Unavailable";;
-	504) echo "Gateway Timeout";;
-	*) echo "(Unknown)";;
-	esac
+fn timer "%b <start|end>" "\
+Record a span of time with nanosecond accuracy. Depends on the global variable \033[33mstart\033[m\n\
+Started with '\033[32mtimer\033[m start' and ended (which also prints the recorded time) with\n\
+'\033[32timer\033[m end'."
+declare -i start
+timer() {
+    [ "$1" == "start" ] && { start=$(date +%s%N); return; }
+    [ "$1" == "end" ] && printf "%6.4f" $(echo $(($(date +%s%N)-$start))/1000000000 | bc -l) \
+    || { log "Bad use of timer"; return 1; }
 }
 
-strerr() { strcode $ERR; }
+fn rest "[echo <payload...> |] %b <token> <user-agent> <method> <url> [selectors...]" "\
+Send a request to the REST API with specified authorization token, \n\
+User-Agent header, HTTP method, and endpoint."
+rest() {
+    # Create pipe for the response to go through
+    local response=/tmp/bashcord_rest.$$.txt
+    mkfifo "$response"
 
-declare -xi ERR=999
+    # Pack options into curl arguments
+    log "Sending \033[1m${3^^}\033[m request to \033[34m$4\033[m"
+    local opts=("-w" "%{response_code}" "-X" "${3^^}" "-H" "Authorization: $1" \
+        "-o" "$response" "-H" "Accept: application/json" "-A" "$2" "$4" "-s" )
+    shift 4
+
+    # Check if something non-interactive is sitting in stdin and if so, pass it as json data
+    [ -t 0 ] && local data= || local data=$(cat)
+    [ "$data" ] && opts+=("-H" "Content-Type: application/json" "-d" "$data") || \
+        opts+=("-H" "Content-Length: 0")
+
+    # Send the request, record the response code and filter the response through our JSON parser
+    timer start
+    response_code=$(curl "${opts[@]}") &
+    cat $response | jq "${@:-.}"
+    end=$(date +%s)
+    log "Received response in \033[33m$(timer end)s\033[m"
+
+    # Cleanup and return a non-zero exit code if a non-2XX response code was received
+    pkill $!
+    rm $response    
+    [[ $response_code = 2* ]] || return 1
+}
+
+fn client "%b <token> [-h|--homepage url] [-v|--version ver] [-b|--api-base url]" "\
+Configure the client (required to be run before the \033[32mapi\033[m command)."
+client() {
+    local homepage=https://github.com/trvv/bashcord
+    local ver=1.33.7
+    local -a args
+    while [ "$1" ]; do
+        case "$1" in
+            -b|--api-base) api_base=$2; shift;;
+            -h|--homepage) homepage=$2; shift;;
+            -v|--version) ver=$2; shift;;
+            *) args+=("$1");;
+        esac; shift
+    done
+    user_agent="DiscordBot ($homepage, $ver)"
+    token=${args[0]}
+}
+
+fn api "[echo <payload...> |] %b <method> <endpoint/opcode> [selectors...]" "\
+High level API access pulling from configuration\
+established by \033[32mclient\033[m."
 api() {
-	local url=${bashcord[api_base]}$2
-	exec 3>&1
-    declare -xi ERR="$(curl -w '%{http_code}' -o >(cat >&3) -X "$1" -s \
-    	-H "Authorization: ${bashcord[token]}" -A "$(get_agent)" "$url" \
-    	$([[ "$3" ]] && echo "-d \"$3\" -H 'application/json'"))"
-	debug "'$1' request to '$2' responded with '$(strerr)' ($ERR)'"
-	if [ $ERR -ne 200 ]; then
-		return 1
-	else
-		return 0
-	fi
-}
-#endregion
+    if [ ! "$token" ]; then
+        log "\033[31mToken not set!\033[m"
+        return
+    fi
 
-#region :: Rest API endpoint wrappers
-avatar() { user_avatar_url_png "$(user $1 .id)" "$(user $1 .avatar)"; }
+    if [ $# -lt 2 ]; then
+        log "Need a method and target!"
+        return
+    fi
 
-user() {
-	local out=$(api GET /users/$1)
-	shift
-	if [[ "$1" ]]; then
-		echo "$out" | jq -r "$@"
-	else
-		echo "$out" | jq
-	fi
+    local method=$1
+    local endpoint=$2
+    shift 2
+
+    if [ "$method" == "send" ]; then
+        $ws_connected || log "\033[31mNot connected to gateway!\033[m"
+        return
+    fi
+
+    rest "$token" "$user_agent" "$method" "$api_base$endpoint"
 }
 
-me() { user @me "$@"; }
+cat <<EOF
+$(printf "\033[34;1m") 
+ ▄▄▄▄    ▄▄▄        ██████  ██░ ██  ▄████▄   ▒█████   ██▀███  ▓█████▄ 
+▓█████▄ ▒████▄    ▒██    ▒ ▓██░ ██▒▒██▀ ▀█  ▒██▒  ██▒▓██ ▒ ██▒▒██▀ ██▌
+▒██▒ ▄██▒██  ▀█▄  ░ ▓██▄   ▒██▀▀██░▒▓█    ▄ ▒██░  ██▒▓██ ░▄█ ▒░██   █▌
+▒██░█▀  ░██▄▄▄▄██   ▒   ██▒░▓█ ░██ ▒▓▓▄ ▄██▒▒██   ██░▒██▀▀█▄  ░▓█▄   ▌
+░▓█  ▀█▓ ▓█   ▓██▒▒██████▒▒░▓█▒░██▓▒ ▓███▀ ░░ ████▓▒░░██▓ ▒██▒░▒████▓ 
+░▒▓███▀▒ ▒▒   ▓▒█░▒ ▒▓▒ ▒ ░ ▒ ░░▒░▒░ ░▒ ▒  ░░ ▒░▒░▒░ ░ ▒▓ ░▒▓░ ▒▒▓  ▒ 
+▒░▒   ░   ▒   ▒▒ ░░ ░▒  ░ ░ ▒ ░▒░ ░  ░  ▒     ░ ▒ ▒░   ░▒ ░ ▒░ ░ ▒  ▒ 
+ ░    ░   ░   ▒   ░  ░  ░   ░  ░░ ░░        ░ ░ ░ ▒    ░░   ░  ░ ░  ░ 
+ ░            ░  ░      ░   ░  ░  ░░ ░          ░ ░     ░        ░    
+      ░                            ░                           ░     $(printf "\033[m")
+EOF
 
-#endregion
-
-#region :: Message Formatting
-mention_user() { echo "<@$1>"; }
-mention_nick() { echo "<@!$1>"; }
-mention_channel() { echo "<#$1>"; }
-mention_role() { echo "<@&$1>"; }
-mention_emoji() { echo "<:$1:$2>"; }
-mention_aemoji() { echo "<a:$1:$2>"; }
-#endregion
-
-#region :: CDN Requests
-cdn() { echo "${bashcord[cdn_base]}/$1"; }
-emoji_url() { emoji_url_gif "$1"; }
-emoji_url_png() { cdn "emojis/$1.png"; }
-emoji_url_gif() { cdn "emojis/$1.gif"; }
-guild_icon_url() { guild_icon_url_png "$1" "$2"; }
-guild_icon_url_png() { cdn "icons/$1/$2.png"; }
-guild_icon_url_jpg() { cdn "icons/$1/$2.jpg"; }
-guild_icon_url_webp() { cdn "icons/$1/$2.webp"; }
-guild_icon_url_gif() { cdn "icons/$1/$2.gif"; }
-guild_splash_url() { guild_splash_url_png "$1" "$2"; }
-guild_splash_url_png() { cdn "splashes/$1/$2.png"; }
-guild_splash_url_jpg() { cdn "splashes/$1/$2.jpg"; }
-guild_splash_url_webp() { cdn "splashes/$1/$2.webp"; }
-guild_banner_url() { guild_banner_url_png "$1" "$2"; }
-guild_banner_url_png() { cdn "banners/$1/$2.png"; }
-guild_banner_url_jpg() { cdn "banners/$1/$2.jpg"; }
-guild_banner_url_webp() { cdn "banners/$1/$2.webp"; }
-default_user_avatar_url() { default_user_avatar_url_png "$1"; }
-default_user_avatar_url_png() { cdn "embed/avatars/$1.png"; }
-user_avatar_url() { user_avatar_url_png "$1" "$2"; }
-user_avatar_url_png() { cdn "avatars/$1/$2.png"; }
-user_avatar_url_jpg() { cdn "avatars/$1/$2.jpg"; }
-user_avatar_url_webp() { cdn "avatars/$1/$2.webp"; }
-user_avatar_url_gif() { cdn "avatars/$1/$2.gif"; }
-application_icon_url() { application_icon_url_png "$1" "$2"; }
-application_icon_url_png() { cdn "app-icons/$1/$2.png"; }
-application_icon_url_jpg() { cdn "app-icons/$1/$2.jpg"; }
-application_icon_url_webp() { cdn "app-icons/$1/$2.webp"; }
-application_asset_url() { application_asset_url_png "$1" "$2"; }
-application_asset_url_png() { cdn "app-assets/$1/$2.png"; }
-application_asset_url_jpg() { cdn "app-assets/$1/$2.jpg"; }
-application_asset_url_webp() { cdn "app-assets/$1/$2.webp"; }
-achievment_icon_url() { achievment_icon_url_png "$1" "$2" "$3"; }
-achievment_icon_url_png() { cdn "app-assets/$1/achievments/$2/icons/$3.png"; }
-achievment_icon_url_jpg() { cdn "app-assets/$1/achievments/$2/icons/$3.png"; }
-achievment_icon_url_webp() { cdn "app-assets/$1/achievments/$2/icons/$3.webp"; }
-team_icon_url() { team_icon_url_png "$1" "$2"; }
-team_icon_url_png() { cdn "team-icons/$1/$2.png"; }
-team_icon_url_jpg() { cdn "team-icons/$1/$2.jpg"; }
-team_icon_url_webp() { cdn "team-icons/$1/$2.webp"; }
-format_image_base64() { echo "data:image/$1;base64,$2"; }
-#endregion
-
-#region :: Requirements
-missing=""
-for requirement in ${bashcord[requirements]}; do
-	if ! command -v $requirement 2>/dev/null >&2; then
-		missing="$missing$requirement "
-	fi
+missing=()
+for dep in jq curl websocat; do
+    command -v $dep 2>&1 >/dev/null || missing+=($dep)
 done
-if [[ "$missing" ]]; then
-	log ERROR "Missing command(s): $missing"
+
+if [ "${missing[0]}" ]; then
+    log "\033[31mMissing command(s): ${missing[@]}. Script will break or not work at all.\033[m"
 fi
-unset missing
-#endregion
+
+if [ "$1" ]; then
+    client "$@"
+else
+    log "\033[31mNo arguments provided, client will need to be configured!\033[m"
+fi
+
+log "Registered \033[1m${#function_usage[@]}\033[m functions (see with \033[32musage\033[m)."
+
+if ! ping -c 1 discord.com >/dev/null 2>&1; then
+    log "\033[31mDiscord appears to be down!\033[m"
+fi
+
+while read -p "$(printf "\033[34m")>>$(printf "\033[m") "; do
+    eval "$REPLY"
+done
