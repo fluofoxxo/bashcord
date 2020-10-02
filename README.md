@@ -10,4 +10,4 @@
 
     git clone https://github.com/trvv/bashcord
     cd bashcord
-    ./baschord
+    ./bashcord
